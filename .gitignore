@@ -1,0 +1,29 @@
+# Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Python compiled files
+__pycache__/
+*.pyc
+
+# Config and local files
+.env
+bot.log
+bot.log.*
+
+# Trading and User Data
+trading_journal.csv
+
+# Downloaded or generated images
+*.png
+*.jpg
+*.jpeg
+
+# IDE settings
+.vscode/
+.idea/
+
+# Agent local state
+.gemini/

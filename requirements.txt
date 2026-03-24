@@ -1,0 +1,7 @@
+requests
+pyautogui
+pygetwindow
+pywin32
+telebot
+python-dotenv
+matplotlib
