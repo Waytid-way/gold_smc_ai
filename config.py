@@ -15,7 +15,21 @@ TELEGRAM_CHAT_ID  = os.getenv("TG_CHAT_ID")
 _raw_url = os.getenv("WEBAPP_URL", "https://example.ngrok.app").strip()
 if _raw_url and not _raw_url.startswith("http"):
     _raw_url = "https://" + _raw_url
-WEBAPP_URL = _raw_url
+
+def validate_webapp_url(url: str) -> bool:
+    """Validate WEBAPP_URL format"""
+    if not url:
+        return False
+    url = url.strip()
+    if not (url.startswith("http://") or url.startswith("https://")):
+        return False
+    if "." not in url.split("://")[1]:
+        return False
+    return True
+
+if WEBAPP_URL and not validate_webapp_url(WEBAPP_URL):
+    logger.warning(f"Invalid WEBAPP_URL: {WEBAPP_URL}")
+    WEBAPP_URL = ""
 
 # ───── Paths ─────
 DOWNLOAD_DIR       = os.getenv("DOWNLOAD_DIR", r"C:\Users\com\Downloads")

@@ -206,8 +206,9 @@ def register_handlers(bot: telebot.TeleBot) -> None:
     def handle_clearchat(message):
         if not _is_authorized(message.chat.id):
             return
+        clear_csv()
         gemini_api.clear_history()
-        bot.reply_to(message, "🗑️ ล้าง Conversation History แล้ว Gemini จะเริ่มตอบโดยไม่จำบริบทก่อนหน้าครับ")
+        bot.reply_to(message, "🗑️ ล้าง Conversation History, Database และ CSV แล้ว")
 
     # ── /clear_pending ─────────────────────────────────────────────────────
     @bot.message_handler(commands=["clear_pending"])

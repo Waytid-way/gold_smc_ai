@@ -455,6 +455,17 @@ def get_pending_trades(hours: float = config.PENDING_ALERT_HOURS) -> list[dict]:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# CSV Clearing
+# ──────────────────────────────────────────────────────────────────────────────
+
+def clear_csv():
+    """Delete CSV file (will be recreated on next insert)"""
+    if os.path.isfile(config.JOURNAL_FILE):
+        os.remove(config.JOURNAL_FILE)
+        logger.info(f"🗑️ Deleted CSV: {config.JOURNAL_FILE}")
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # Clear All History
 # ──────────────────────────────────────────────────────────────────────────────
 
