@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Journal PnL Grid</title>
+    <!-- Use Telegram Web App API to integrate with Telegram theme colors -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts for modern look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        
+        <header class="header">
+            <h1 id="month-title">Trading Journal</h1>
+            <p class="subtitle">Performance Heatmap</p>
+            <button class="view-history-btn" onclick="window.location.href='/history.html'" title="View full trade history">
+                📋 History
+            </button>
+        </header>
+
+        <div class="stats-overview">
+            <div class="stat-card">
+                <span class="stat-label">Total PnL</span>
+                <span class="stat-value" id="val-total-pnl">$0.00</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Win Rate</span>
+                <span class="stat-value" id="val-win-rate">0%</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Total Trades</span>
+                <span class="stat-value" id="val-total-trades">0</span>
+            </div>
+        </div>
+
+        <section class="grid-section">
+            <div class="grid-header">
+                <h2>Monthly Calendar</h2>
+                <span class="legend">
+                    <span class="legend-item"><span class="dot green"></span> Profit</span>
+                    <span class="legend-item"><span class="dot red"></span> Loss</span>
+                    <span class="legend-item"><span class="dot gray"></span> Missed / PENDING</span>
+                </span>
+            </div>
+            
+            <div id="calendar-grid" class="calendar-grid">
+                <!-- Javascript will populate days here -->
+            </div>
+        </section>
+
+        <!-- Tooltip for hover/tap info -->
+        <div id="tooltip" class="tooltip hidden"></div>
+
+        <!-- AI Analysis Modal -->
+        <div id="modal-overlay" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>AI Analysis</h2>
+                    <button class="modal-close" onclick="closeAIModal()">&times;</button>
+                </div>
+                
+                <div class="analysis-section">
+                    <span class="analysis-label">Result</span>
+                    <div class="analysis-row">
+                        <strong>Status:</strong>
+                        <span id="modal-result">-</span>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <span class="analysis-label">Trade Details</span>
+                    <div class="analysis-row">
+                        <strong>RR:</strong>
+                        <span id="modal-rr">-</span>
+                    </div>
+                    <div class="analysis-row">
+                        <strong>PnL:</strong>
+                        <span id="modal-pnl">-</span>
+                    </div>
+                    <div class="analysis-row">
+                        <strong>Date:</strong>
+                        <span id="modal-date">-</span>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <span class="analysis-label">Gemini AI Analysis</span>
+                    <div class="analysis-text" id="modal-analysis">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

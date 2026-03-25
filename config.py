@@ -10,10 +10,18 @@ GEMINI_MODEL      = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-lite")
 TELEGRAM_BOT_TOKEN = os.getenv("TG_BOT_TOKEN")
 TELEGRAM_CHAT_ID  = os.getenv("TG_CHAT_ID")
 
+# ───── Web App ─────
+# ต้องเป็น HTTPS เท่านั้น (ถ้ารัน local ต้องผ่าน ngrok)
+_raw_url = os.getenv("WEBAPP_URL", "https://example.ngrok.app").strip()
+if _raw_url and not _raw_url.startswith("http"):
+    _raw_url = "https://" + _raw_url
+WEBAPP_URL = _raw_url
+
 # ───── Paths ─────
 DOWNLOAD_DIR       = os.getenv("DOWNLOAD_DIR", r"C:\Users\com\Downloads")
 SCREENSHOT_PATTERN = os.getenv("SCREENSHOT_PATTERN", "XAUUSD_*.png")
 JOURNAL_FILE       = os.path.join(os.path.dirname(os.path.abspath(__file__)), "trading_journal.csv")
+DB_FILE            = os.path.join(os.path.dirname(os.path.abspath(__file__)), "trading_journal.db")
 LOG_FILE           = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bot.log")
 
 # ───── Keyboard VK Codes ─────
@@ -41,12 +49,18 @@ def validate():
 custom_prompt: str = ""
 
 BASE_PROMPT = (
-    "คุณคือเทรดเดอร์ SMC ชำนาญ XAUUSD ใช้แนวคิด BOS/CHoCH, OB, Liquidity\n"
-    "รูปนี้คือ dashboard จาก indicator ของผม จงอ่านค่าและวิเคราะห์แบบ 'สั้น กระชับ ตรงประเด็นที่สุด'\n"
-    "ตอบเพียงหัวข้อเหล่านี้ ห้ามเกริ่นนำ:\n"
-    "🎯 Bias: [Bullish / Bearish / Neutral]\n"
-    "📍 Entry: [ราคา]\n"
-    "🛑 SL: [ราคา]\n"
-    "💰 TP: [ราคา]\n"
-    "💡 แผนการเทรด: [สรุปสั้นๆ 2-3 บรรทัด เช่น รอราคาย่อเข้า OB แล้ว Sell]"
+    "คุณคือเทรดเดอร์ SMC ชำนาญ XAUUSD ใช้แนวคิด BOS/CHoCH, OB, Liquidity, Premium/Discount\n"
+    "รูปนี้คือ dashboard จากตัวบ่งชี้ที่สะสม Bias, OB, Liquidity, FVG, RSI ฯลฯ\n\n"
+    "📋 ให้ตอบเป็น JSON เท่านั้น โดยไม่มีข้อความอื่น:\n\n"
+    "{\n"
+    '  "entry": <เลขตัวเลขราคาเข้า>,\n'
+    '  "tp": <เลขตัวเลขราคา Take Profit>,\n'
+    '  "sl": <เลขตัวเลขราคา Stop Loss>,\n'
+    '  "reason": "<สรุป 30-50 คำ: เหตุผลของ Trade Setup นี้ เช่น Support breakdown, Bearish OB, ลิควิดิตี้พร้อม>"\n'
+    "}\n\n"
+    "⚠️ IMPORTANT:\n"
+    "- ให้ตอบแค่ JSON object เท่านั้น ไม่มี markdown code blocks หรือข้อความเพิ่มเติม\n"
+    "- ราคาต้องเป็นตัวเลขเท่านั้น (เช่น 2100.50 ไม่ใช่ '2100.50 USD')\n"
+    "- reason ต้องเป็น string เท่านั้น ห้ามใส่ emoji\n"
+    "- ถ้าหากไม่มีสัญญาณชัดเจน ให้ตอบ null แทนราคา"
 )

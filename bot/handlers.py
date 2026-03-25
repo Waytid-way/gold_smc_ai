@@ -8,13 +8,14 @@ import webbrowser
 import pyautogui
 import pygetwindow as gw
 import telebot
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply, WebAppInfo
 from telebot.util import smart_split
 
 import config
 from services import screenshot as sc
 from services import gemini_api
 from services import journal
+from services import formatter
 from utils.text import clean_gemini_response
 from bot.callbacks import _pending_rr
 
@@ -89,9 +90,28 @@ def _do_snap(bot: telebot.TeleBot, chat_id: int, reply_to_msg_id: int | None = N
         analysis = gemini_api.call_gemini_image(img_path, prompt)
         logger.info(f"Gemini ตอบกลับใน {time.time() - t0:.1f}s")
 
-        # 5. ส่งกลับ Telegram
-        cleaned = clean_gemini_response(analysis)
-        reply_text = f"<b>ผลการวิเคราะห์ XAUUSD</b>\n\n{cleaned}"
+        # 5. พยายามแยก JSON จาก response
+        parsed_json = formatter.parse_gemini_json_response(analysis)
+        
+        if parsed_json:
+            # ✅ JSON parse สำเร็จ
+            logger.info(f"✅ Parsed JSON: {parsed_json}")
+            formatted_msg = formatter.format_trade_analysis(parsed_json)
+            reply_text = f"<b>📊 ผลการวิเคราะห์ XAUUSD</b>\n\n{formatted_msg}"
+            
+            # เก็บข้อมูล JSON ลง journal ด้วย
+            trade_data = {
+                "entry": parsed_json.get("entry"),
+                "tp": parsed_json.get("tp"),
+                "sl": parsed_json.get("sl"),
+                "reason": parsed_json.get("reason")
+            }
+        else:
+            # ❌ JSON parse ไม่สำเร็จ ใช้เหมือนเดิม
+            logger.warning("⚠️ JSON parse failed, using raw text fallback")
+            cleaned = clean_gemini_response(analysis)
+            reply_text = f"<b>ผลการวิเคราะห์ XAUUSD</b>\n\n{cleaned}"
+            trade_data = None
 
         markup = InlineKeyboardMarkup()
         markup.row_width = 3
@@ -113,7 +133,8 @@ def _do_snap(bot: telebot.TeleBot, chat_id: int, reply_to_msg_id: int | None = N
                 bot.send_message(chat_id, chunk, reply_markup=current_markup)
 
         # บันทึกลง journal ด้วย Trade Result ว่าง (จะอัปเดตเมื่อกดปุ่ม)
-        journal.save_to_journal(filename, "", analysis)
+        # เก็บ JSON data ถ้ามี
+        journal.save_to_journal(filename, "", analysis, trade_data=trade_data)
 
     except TimeoutError:
         bot.send_message(
@@ -156,7 +177,11 @@ def register_handlers(bot: telebot.TeleBot) -> None:
         if stats["total"] == 0:
             bot.send_message(message.chat.id, "📭 ยังไม่มีข้อมูลการเทรดใน Journal ครับ")
             return
-        bot.send_message(message.chat.id, journal.format_stats_text(stats))
+            
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton("📊 เปิดดู PnL รายเดือน (Grid)", web_app=WebAppInfo(url=config.WEBAPP_URL)))
+        
+        bot.send_message(message.chat.id, journal.format_stats_text(stats), reply_markup=markup)
 
         chart_bytes = journal.generate_stats_chart()
         if chart_bytes:
@@ -183,6 +208,36 @@ def register_handlers(bot: telebot.TeleBot) -> None:
             return
         gemini_api.clear_history()
         bot.reply_to(message, "🗑️ ล้าง Conversation History แล้ว Gemini จะเริ่มตอบโดยไม่จำบริบทก่อนหน้าครับ")
+
+    # ── /clear_pending ─────────────────────────────────────────────────────
+    @bot.message_handler(commands=["clear_pending"])
+    def handle_clear_pending(message):
+        if not _is_authorized(message.chat.id):
+            return
+
+        deleted = journal.delete_pending_trades()
+
+        if deleted == 0:
+            bot.reply_to(message, "✅ ไม่มีออเดอร์ค้างในระบบเลยครับ")
+        else:
+            bot.reply_to(message, f"🗑️ ล้างออเดอร์ที่ยังไม่ได้บันทึกผล (Pending) ไปแล้วจำนวน {deleted} รายการครับ!")
+
+    # ── /clear_history ─────────────────────────────────────────────────────
+    @bot.message_handler(commands=["clear_history"])
+    def handle_clear_history(message):
+        if not _is_authorized(message.chat.id):
+            return
+
+        je_deleted, sc_deleted = journal.clear_all_history()
+        
+        bot.reply_to(
+            message,
+            f"🧹 **เคลียร์ประวัติเก่าทั้งหมดเรียบร้อยแล้ว!**\n\n"
+            f"• รายการเทรด (Journal): ลบ `{je_deleted}` รายการ\n"
+            f"• รูปภาพ (Screenshots): ลบ `{sc_deleted}` รายการ\n\n"
+            f"✨ พิมพ์ `/stats` เพื่อแสดงตารางที่ว่างเปล่าได้เลยครับ",
+            parse_mode="Markdown"
+        )
 
     # ── Follow-up text (ถามต่อเนื่องจาก analysis) ──────────────────────────
     @bot.message_handler(func=lambda m: (

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trade History</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="history-header">
+            <button class="back-btn" onclick="goToDashboard()">← Back</button>
+            <h1>Trade History</h1>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <div class="filter-group">
+                <label for="filter-result">Result</label>
+                <select id="filter-result" onchange="applyFilters()">
+                    <option value="">All</option>
+                    <option value="WIN">✅ Win</option>
+                    <option value="LOSS">❌ Loss</option>
+                    <option value="MISSED">⏩ Missed</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filter-start-date">From</label>
+                <input type="date" id="filter-start-date" onchange="applyFilters()">
+            </div>
+
+            <div class="filter-group">
+                <label for="filter-end-date">To</label>
+                <input type="date" id="filter-end-date" onchange="applyFilters()">
+            </div>
+
+            <button class="reset-btn" onclick="resetFilters()">Reset</button>
+        </div>
+
+        <!-- Table Section -->
+        <div class="table-section">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Result</th>
+                        <th>RR</th>
+                        <th>PnL</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="trades-tbody">
+                    <tr class="loading-row">
+                        <td colspan="5" style="text-align: center; padding: 20px;">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Section -->
+        <div class="pagination-section">
+            <button id="prev-btn" class="pag-btn" onclick="prevPage()" disabled>← Prev</button>
+            <span id="page-info">Page 1 of 1</span>
+            <button id="next-btn" class="pag-btn" onclick="nextPage()" disabled>Next →</button>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="report-overlay">
+        <div id="report-modal">
+            <div class="report-header">
+                <h2>Report Issue</h2>
+                <button class="report-close" onclick="closeReportModal()">&times;</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Trade ID</label>
+                <div class="trade-id-display" id="report-trade-id">-</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="report-reason">Issue Category</label>
+                <select id="report-reason" class="report-select">
+                    <option value="">-- Select reason --</option>
+                    <option value="ANALYSIS_ERROR">❌ AI Analysis ผิด</option>
+                    <option value="DATA_ERROR">❌ ข้อมูลผิด</option>
+                    <option value="BUG">🐛 Bug ระบบ</option>
+                    <option value="OTHER">📝 อื่นๆ</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="report-details">Details (Optional)</label>
+                <textarea id="report-details" class="report-textarea" placeholder="Describe the issue..."></textarea>
+            </div>
+
+            <button onclick="submitReport()" class="report-submit-btn">Submit Report</button>
+        </div>
+    </div>
+
+    <!-- AI Analysis Modal (reuse from index.html) -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>AI Analysis</h2>
+                <button class="modal-close" onclick="closeAIModal()">&times;</button>
+            </div>
+            
+            <div class="analysis-section">
+                <span class="analysis-label">Result</span>
+                <div class="analysis-row">
+                    <strong>Status:</strong>
+                    <span id="modal-result">-</span>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <span class="analysis-label">Trade Details</span>
+                <div class="analysis-row">
+                    <strong>RR:</strong>
+                    <span id="modal-rr">-</span>
+                </div>
+                <div class="analysis-row">
+                    <strong>PnL:</strong>
+                    <span id="modal-pnl">-</span>
+                </div>
+                <div class="analysis-row">
+                    <strong>Date:</strong>
+                    <span id="modal-date">-</span>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <span class="analysis-label">Gemini AI Analysis</span>
+                <div class="analysis-text" id="modal-analysis">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="history.js"></script>
+</body>
+</html>

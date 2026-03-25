@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Reports Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Admin-specific styles */
+        :root {
+            --admin-bg: #0a0e27;
+            --admin-card: #1a1f3a;
+            --admin-border: rgba(100, 200, 255, 0.2);
+            --admin-row-hover: rgba(100, 200, 255, 0.1);
+            --danger-color: #ff5252;
+            --warning-color: #ffb74d;
+            --info-color: #64b5f6;
+            --success-color: #81c784;
+        }
+
+        body {
+            background: var(--admin-bg);
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--admin-border);
+        }
+
+        .admin-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--info-color);
+        }
+
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--info-color);
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+        }
+
+        .filter-select {
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-select:hover {
+            border-color: var(--info-color);
+        }
+
+        .filter-select option {
+            background: var(--admin-card);
+            color: #fff;
+        }
+
+        .refresh-btn {
+            background: var(--info-color);
+            border: none;
+            color: var(--admin-bg);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #4da3f5;
+            transform: translateY(-2px);
+        }
+
+        .reports-table {
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 60px 100px 120px 100px 150px 200px 100px;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(100, 200, 255, 0.1);
+            border-bottom: 1px solid var(--admin-border);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--info-color);
+            letter-spacing: 0.5px;
+        }
+
+        .table-body {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 60px 100px 120px 100px 150px 200px 100px;
+            gap: 16px;
+            padding: 16px;
+            border-bottom: 1px solid var(--admin-border);
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .table-row:hover {
+            background: var(--admin-row-hover);
+        }
+
+        .table-row:hover .row-details {
+            opacity: 1;
+        }
+
+        .report-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: var(--info-color);
+        }
+
+        .trade-id {
+            font-family: monospace;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .trade-date {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .badge-error {
+            background: rgba(255, 82, 82, 0.2);
+            color: var(--danger-color);
+        }
+
+        .badge-data {
+            background: rgba(255, 180, 77, 0.2);
+            color: var(--warning-color);
+        }
+
+        .badge-bug {
+            background: rgba(100, 181, 246, 0.2);
+            color: var(--info-color);
+        }
+
+        .badge-other {
+            background: rgba(129, 199, 132, 0.2);
+            color: var(--success-color);
+        }
+
+        .trade-result {
+            font-weight: 600;
+        }
+
+        .result-win {
+            color: var(--success-color);
+        }
+
+        .result-loss {
+            color: var(--danger-color);
+        }
+
+        .result-miss {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .details-text {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            max-height: 2em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .reported-at {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .action-btn {
+            background: transparent;
+            border: 1px solid var(--admin-border);
+            color: var(--info-color);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: var(--admin-row-hover);
+            border-color: var(--info-color);
+        }
+
+        .pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            padding: 20px;
+            background: var(--admin-card);
+            border-radius: 12px;
+        }
+
+        .page-info {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .pag-btn {
+            background: var(--info-color);
+            border: none;
+            color: var(--admin-bg);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pag-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pag-btn:hover:not(:disabled) {
+            background: #4da3f5;
+        }
+
+        .detail-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .detail-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-close {
+            float: right;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+        }
+
+        .modal-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(100, 200, 255, 0.05);
+            border-left: 3px solid var(--info-color);
+            border-radius: 6px;
+        }
+
+        .modal-label {
+            font-size: 11px;
+            color: var(--info-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .modal-value {
+            font-size: 14px;
+            color: #fff;
+            word-break: break-word;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 1200px) {
+            .table-header,
+            .table-row {
+                grid-template-columns: 50px 80px 100px 80px 120px 1fr 80px;
+            }
+
+            .details-text {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .table-header,
+            .table-row {
+                grid-template-columns: 1fr;
+            }
+
+            .table-header {
+                display: flex;
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .table-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .admin-header {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="admin-header">
+            <h1>📊 Reports Dashboard</h1>
+            <button class="refresh-btn" onclick="loadReports()">🔄 Refresh</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="admin-stats" id="stats-container">
+            <div class="stat-box">
+                <div class="stat-label">Total Reports</div>
+                <div class="stat-value" id="total-reports">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Analysis Errors</div>
+                <div class="stat-value" id="analysis-errors">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Data Errors</div>
+                <div class="stat-value" id="data-errors">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Bug Reports</div>
+                <div class="stat-value" id="bug-reports">0</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label for="sort-select">Sort By:</label>
+                <select id="sort-select" class="filter-select" onchange="loadReports(1)">
+                    <option value="reported_at">Latest Report</option>
+                    <option value="trade_id">Trade ID</option>
+                    <option value="reason">Reason</option>
+                </select>
+            </div>
+            <div class="filter-group" style="margin-left: auto;">
+                <label for="limit-select">Per Page:</label>
+                <select id="limit-select" class="filter-select" onchange="loadReports(1)">
+                    <option value="20">20</option>
+                    <option value="50" selected>50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Reports Table -->
+        <div class="reports-table">
+            <div class="table-header">
+                <div>ID</div>
+                <div>Trade ID</div>
+                <div>Trade Date</div>
+                <div>Result</div>
+                <div>Reason</div>
+                <div>Details</div>
+                <div>Reported</div>
+            </div>
+            <div class="table-body" id="reports-tbody">
+                <div class="empty-state">
+                    <div class="empty-state-icon">⏳</div>
+                    <p>Loading reports...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-controls">
+            <button class="pag-btn" id="prev-btn" onclick="prevPage()">← Prev</button>
+            <span class="page-info" id="page-info">Page 1 of 1</span>
+            <button class="pag-btn" id="next-btn" onclick="nextPage()">Next →</button>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="detail-modal" class="detail-modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+            
+            <div class="modal-section">
+                <div class="modal-label">Report ID</div>
+                <div class="modal-value" id="modal-report-id">-</div>
+            </div>
+
+            <div class="modal-section">
+                <div class="modal-label">Trade Information</div>
+                <div style="display: grid; gap: 10px;">
+                    <div>
+                        <div class="modal-label" style="margin-bottom: 2px;">Trade ID</div>
+                        <div class="modal-value" id="modal-trade-id" style="font-family: monospace;">-</div>
+                    </div>
+                    <div>
+                        <div class="modal-label" style="margin-bottom: 2px;">Date</div>
+                        <div class="modal-value" id="modal-trade-date">-</div>
+                    </div>
+                    <div>
+                        <div class="modal-label" style="margin-bottom: 2px;">Result</div>
+                        <div class="modal-value" id="modal-trade-result">-</div>
+                    </div>
+                    <div>
+                        <div class="modal-label" style="margin-bottom: 2px;">RR / PnL</div>
+                        <div class="modal-value" id="modal-rr-pnl">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-section">
+                <div class="modal-label">Issue Reported</div>
+                <div style="display: grid; gap: 10px;">
+                    <div>
+                        <div class="modal-label" style="margin-bottom: 2px;">Reason</div>
+                        <div class="modal-value" id="modal-reason">-</div>
+                    </div>
+                    <div>
+                        <div class="modal-label" style="margin-bottom: 2px;">Reported At</div>
+                        <div class="modal-value" id="modal-reported-at">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-section">
+                <div class="modal-label">Details</div>
+                <div class="modal-value" id="modal-details" style="white-space: pre-wrap; font-family: monospace; font-size: 12px;">-</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
